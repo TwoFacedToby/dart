@@ -2,11 +2,12 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
+    --atw-columns: 1;
 }
 
 .atw-board__header {
     display: grid;
-    grid-template-columns: repeat(var(--atw-columns), minmax(140px, 1fr));
+    grid-template-columns: repeat(var(--atw-columns, 1), minmax(140px, 1fr));
     position: sticky;
     top: 0;
     z-index: 1;
@@ -75,7 +76,7 @@
 
 .atw-board__row {
     display: grid;
-    grid-template-columns: repeat(var(--atw-columns), minmax(140px, 1fr));
+    grid-template-columns: repeat(var(--atw-columns, 1), minmax(140px, 1fr));
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -135,11 +136,11 @@
 
 /* Big variant, used full-screen on the second display */
 .atw-board--big .atw-board__header {
-    grid-template-columns: repeat(var(--atw-columns), minmax(160px, 1fr));
+    grid-template-columns: repeat(var(--atw-columns, 1), minmax(160px, 1fr));
 }
 
 .atw-board--big .atw-board__row {
-    grid-template-columns: repeat(var(--atw-columns), minmax(160px, 1fr));
+    grid-template-columns: repeat(var(--atw-columns, 1), minmax(160px, 1fr));
 }
 
 .atw-board--big .atw-board__header-cell,

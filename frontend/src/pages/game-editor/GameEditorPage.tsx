@@ -79,7 +79,7 @@ export function GameEditorPage() {
                     <button
                         key={g.type}
                         type="button"
-                        className="chip"
+                        className="game-editor__type-btn"
                         onClick={() => setChosenType(g.type)}
                     >
                         {g.label}
