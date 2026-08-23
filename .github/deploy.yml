@@ -1,0 +1,28 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/dart-app/dart
+            git pull origin master
+
+            cd backend
+            npm ci
+            npm run build
+            sudo systemctl restart dart-app
+
+            cd ../frontend
+            npm ci
+            npm run build
