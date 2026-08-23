@@ -2,7 +2,8 @@ import { useState } from "react";
 import { throwCricketDart, reorderCricket, undoCricket, discardCricketGame, type CricketGameState, type CricketTarget, type CricketHitType } from "../../api";
 import { CricketBoard } from "./CricketBoard";
 import { CricketInputPanel } from "./CricketInputPanel";
-import { DiscardGameButton } from "../../components/discard-game/DiscardGameButton";
+import { SettingsMenu } from "../../components/game-controls/SettingsMenu";
+import { UndoButton } from "../../components/game-controls/UndoButton";
 
 import "./CricketGamePlay.css";
 
@@ -50,13 +51,25 @@ export function CricketGamePlay({ game, onGameChange, onGameEnded }: CricketGame
         }
     }
 
+    const orderedParticipants = [...game.participants].sort((a, b) => a.turn_order - b.turn_order);
+    const orderItems = orderedParticipants.map(p => ({
+        id: p.id,
+        label: p.player.initials,
+        locked: p.id === game.current_participant_id,
+    }));
+    const canReorder = game.status !== "finished";
+
     return (
         <div className="page">
             <div className="cricket-game-play__header">
                 <h1 className="page__title">Cricket</h1>
                 <div className="cricket-game-play__header-actions">
-                    <button className="btn btn-secondary" onClick={handleUndo}>Undo last</button>
-                    <DiscardGameButton onDiscard={() => discardCricketGame(game.id).then(onGameEnded)} />
+                    <UndoButton onUndo={handleUndo} />
+                    <SettingsMenu
+                        orderItems={canReorder ? orderItems : undefined}
+                        onMove={canReorder ? handleMove : undefined}
+                        onDiscard={() => discardCricketGame(game.id).then(onGameEnded)}
+                    />
                 </div>
             </div>
 
@@ -64,7 +77,7 @@ export function CricketGamePlay({ game, onGameChange, onGameEnded }: CricketGame
 
             {game.status === "finished" && (
                 <div className="game-banner game-banner--success">
-                    Game over, winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.name ?? "-"}
+                    Game over, winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"}
                     <button className="btn btn-primary" onClick={onGameEnded}>Start a new game</button>
                 </div>
             )}
@@ -75,7 +88,7 @@ export function CricketGamePlay({ game, onGameChange, onGameEnded }: CricketGame
                 )}
 
                 <div className="cricket-game-play__board">
-                    <CricketBoard game={game} onMove={game.status !== "finished" ? handleMove : undefined} />
+                    <CricketBoard game={game} />
                 </div>
             </div>
         </div>

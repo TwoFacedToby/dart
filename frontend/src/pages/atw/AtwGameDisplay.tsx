@@ -19,12 +19,12 @@ export function AtwGameDisplay({ game }: AtwGameDisplayProps) {
             )}
             {game.phase === "finale" && (
                 <div className="game-banner game-banner--large">
-                    Finale between {finalists.map(f => f!.player.name).join(" and ")}
+                    Finale between {finalists.map(f => f!.player.initials).join(" and ")}
                 </div>
             )}
             {game.phase === "finished" && (
                 <div className="game-banner game-banner--success game-banner--large">
-                    {game.participants.find(p => p.player.id === game.winner_id)?.player.name ?? "-"} wins!
+                    {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"} wins!
                 </div>
             )}
 
@@ -48,7 +48,7 @@ export function AtwGameDisplay({ game }: AtwGameDisplayProps) {
                         const scores = game.finale_scores.filter(s => s.player_id === f!.player.id);
                         return (
                             <tr key={f!.id}>
-                                <td>{f!.player.name}</td>
+                                <td>{f!.player.initials}</td>
                                 {[1, 2, 3].map(r => <td key={r}>{scores.find(s => s.round === r)?.score ?? "-"}</td>)}
                                 <td>{scores.reduce((a, s) => a + s.score, 0)}</td>
                             </tr>

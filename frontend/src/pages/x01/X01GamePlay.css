@@ -24,14 +24,16 @@
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .x01-game-play__item--current {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px var(--color-accent);
+    border-bottom: 1px solid var(--color-highlight);
+    color: var(--color-highlight);
+}
+
+.x01-game-play__name {
+    font-family: var(--font-mono);
 }
 
 .x01-game-play__name {
@@ -41,9 +43,4 @@
 .x01-game-play__remaining {
     font-weight: 700;
     font-size: var(--font-size-lg);
-}
-
-.x01-game-play__controls {
-    display: flex;
-    gap: var(--space-xs);
 }

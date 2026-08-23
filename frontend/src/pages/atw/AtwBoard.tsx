@@ -1,21 +1,20 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
-import type { AtwGameState, AtwHistoryThrow, AtwParticipant } from "../../api";
+import type { AtwGameState, AtwHistoryThrow } from "../../api";
 
 import "./AtwBoard.css";
 
 interface AtwBoardProps {
     game: AtwGameState;
     big?: boolean;
-    onSwap?: (participantId: string, direction: "up" | "down") => void;
 }
 
-// Shared scorecard grid used by both the editor (compact, with reorder
-// controls in the header when onSwap is passed) and viewer (big, read-only).
-// Players run across the columns, rounds down the rows -- this doubles as
-// the turn order display, since the column position already reflects it.
-export function AtwBoard({ game, big, onSwap }: AtwBoardProps) {
+// Shared scorecard grid used by both the editor and viewer. Players run
+// across the columns, rounds down the rows -- this doubles as the turn
+// order display, since the column position already reflects it. Turn
+// order itself is changed through the settings menu, not here.
+export function AtwBoard({ game, big }: AtwBoardProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -25,102 +24,59 @@ export function AtwBoard({ game, big, onSwap }: AtwBoardProps) {
     const columns = [...game.participants].sort((a, b) => a.turn_order - b.turn_order);
     const rows = buildScorecardRows(game.history);
 
-    // A swap is only allowed between two participants who are both still
-    // waiting for a turn this game -- not the one currently up (mid-turn)
-    // and not anyone who's already finished. This is what stops an
-    // accidental reorder from handing someone an extra go or overwriting
-    // whoever the input is actually meant for.
-    const eligible = (p: AtwParticipant) => p.id !== game.current_participant_id && !p.finished;
-
     return (
-        <div className={`atw-board${big ? " atw-board--big" : ""}`}>
+        <div className={`atw-board${big ? " atw-board--big" : ""}`} ref={scrollRef}>
             <div className="atw-board__header" style={{ "--atw-columns": columns.length } as CSSProperties}>
-                {columns.map((p, idx) => {
-                    const prev = columns[idx - 1];
-                    const next = columns[idx + 1];
-                    const canMoveLeft = !!onSwap && eligible(p) && !!prev && eligible(prev);
-                    const canMoveRight = !!onSwap && eligible(p) && !!next && eligible(next);
-
-                    return (
-                        <div
-                            key={p.id}
-                            className={`atw-board__header-cell${p.id === game.current_participant_id ? " atw-board__header-cell--current" : ""}${p.finished ? " atw-board__header-cell--finished" : ""}`}
-                        >
-                            <span className="atw-board__player-name">{big ? p.player.name : `${p.player.initials} ${p.player.name}`}</span>
-
-                            <div className="atw-board__number-row">
-                                {onSwap ? (
-                                    <button
-                                        type="button"
-                                        className="atw-board__move-btn"
-                                        disabled={!canMoveLeft}
-                                        onClick={() => onSwap(p.id, "up")}
-                                        aria-label="Move earlier in turn order"
-                                    >
-                                        ◀
-                                    </button>
-                                ) : <span />}
-
-                                <span className="atw-board__player-number">{p.current_number}</span>
-
-                                {onSwap ? (
-                                    <button
-                                        type="button"
-                                        className="atw-board__move-btn"
-                                        disabled={!canMoveRight}
-                                        onClick={() => onSwap(p.id, "down")}
-                                        aria-label="Move later in turn order"
-                                    >
-                                        ▶
-                                    </button>
-                                ) : <span />}
-                            </div>
-
-                            {p.behind_by >= 5 && !p.finished && !p.catching_up && (
-                                <span className="atw-board__badge atw-board__badge--catchup">catch-up</span>
-                            )}
-                            {p.catching_up && (
-                                <span className="atw-board__badge atw-board__badge--joining">
-                                    joining, {p.catchup_target} turn{p.catchup_target === 1 ? "" : "s"} to catch up
-                                </span>
-                            )}
-                            {p.finished && (
-                                <span className="atw-board__badge atw-board__badge--finished">
-                                    finished{p.finish_order ? ` #${p.finish_order}` : ""}
-                                </span>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
-            <div className="atw-board__body" ref={scrollRef}>
-                {rows.map(row => (
+                {columns.map(p => (
                     <div
-                        key={row.round}
-                        className="atw-board__row"
-                        style={{ "--atw-columns": columns.length } as CSSProperties}
+                        key={p.id}
+                        className={`atw-board__header-cell${p.id === game.current_participant_id ? " atw-board__header-cell--current" : ""}${p.finished ? " atw-board__header-cell--finished" : ""}`}
                     >
-                        {columns.map(col => {
-                            const throws = row.cells.get(col.id);
-                            return (
-                                <div key={col.id} className="atw-board__cell">
-                                    {throws && (
-                                        <div className="atw-board__badges">
-                                            {throws.map(t => (
-                                                <ArrowBadge key={t.dart_index} throwResult={t} />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        <span className="atw-board__player-name">{p.player.initials}</span>
+                        <span className="atw-board__player-number">{p.current_number}</span>
+
+                        {p.behind_by >= 5 && !p.finished && !p.catching_up && (
+                            <span className="atw-board__badge atw-board__badge--catchup">catch-up</span>
+                        )}
+                        {p.catching_up && (
+                            <span className="atw-board__badge atw-board__badge--joining">
+                                joining, {p.catchup_target} turn{p.catchup_target === 1 ? "" : "s"} to catch up
+                            </span>
+                        )}
+                        {p.finished && (
+                            <span className="atw-board__badge atw-board__badge--finished">
+                                finished{p.finish_order ? ` #${p.finish_order}` : ""}
+                            </span>
+                        )}
                     </div>
                 ))}
-                {rows.length === 0 && (
-                    <p className="atw-board__empty">No arrows thrown yet</p>
-                )}
             </div>
+
+            {rows.map(row => (
+                <div
+                    key={row.round}
+                    className="atw-board__row"
+                    style={{ "--atw-columns": columns.length } as CSSProperties}
+                >
+                    {columns.map(col => {
+                        const throws = row.cells.get(col.id);
+                        return (
+                            <div key={col.id} className="atw-board__cell">
+                                {throws && (
+                                    <div className="atw-board__badges">
+                                        {throws.map(t => (
+                                            <ArrowBadge key={t.dart_index} throwResult={t} />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            ))}
+            {rows.length === 0 && (
+                <p className="atw-board__empty">No arrows thrown yet</p>
+            )}
         </div>
     );
 }

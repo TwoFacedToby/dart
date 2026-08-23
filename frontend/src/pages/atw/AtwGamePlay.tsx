@@ -5,7 +5,8 @@ import { AtwTurnStatus } from "./AtwTurnStatus";
 import { AtwActionBar } from "./AtwActionBar";
 import { AtwFinalePanel } from "./AtwFinalePanel";
 import { AtwAddPlayer } from "./AtwAddPlayer";
-import { DiscardGameButton } from "../../components/discard-game/DiscardGameButton";
+import { SettingsMenu } from "../../components/game-controls/SettingsMenu";
+import { UndoButton } from "../../components/game-controls/UndoButton";
 
 import "./AtwGamePlay.css";
 
@@ -31,7 +32,7 @@ export function AtwGamePlay({ game, onGameChange, onGameEnded }: AtwGamePlayProp
         }
     }
 
-    async function handleSwap(participantId: string, direction: "up" | "down") {
+    async function handleMove(participantId: string, direction: "up" | "down") {
         try {
             onGameChange(await swapAtwOrder(game.id, participantId, direction));
         } catch (e: unknown) {
@@ -49,6 +50,12 @@ export function AtwGamePlay({ game, onGameChange, onGameEnded }: AtwGamePlayProp
     }
 
     const canReorder = game.phase === "normal" || game.phase === "ending";
+    const orderedParticipants = [...game.participants].sort((a, b) => a.turn_order - b.turn_order);
+    const orderItems = orderedParticipants.map(p => ({
+        id: p.id,
+        label: p.player.initials,
+        locked: p.id === game.current_participant_id || p.finished,
+    }));
 
     return (
         <div className="page atw-game-play">
@@ -56,8 +63,12 @@ export function AtwGamePlay({ game, onGameChange, onGameEnded }: AtwGamePlayProp
                 <h1 className="page__title">Around the World</h1>
                 <div className="atw-game-play__header-actions">
                     {game.phase === "normal" && <AtwAddPlayer game={game} onAdded={onGameChange} />}
-                    <button className="btn btn-secondary" onClick={handleUndo}>Undo last</button>
-                    <DiscardGameButton onDiscard={() => discardAtwGame(game.id).then(onGameEnded)} />
+                    <UndoButton onUndo={handleUndo} />
+                    <SettingsMenu
+                        orderItems={canReorder ? orderItems : undefined}
+                        onMove={canReorder ? handleMove : undefined}
+                        onDiscard={() => discardAtwGame(game.id).then(onGameEnded)}
+                    />
                 </div>
             </div>
 
@@ -71,12 +82,12 @@ export function AtwGamePlay({ game, onGameChange, onGameEnded }: AtwGamePlayProp
 
             {game.phase === "finished" && (
                 <div className="game-banner game-banner--success">
-                    Game over, winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.name ?? "-"}
+                    Game over, winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"}
                     <button className="btn btn-primary" onClick={onGameEnded}>Start a new game</button>
                 </div>
             )}
 
-            <AtwBoard game={game} onSwap={canReorder ? handleSwap : undefined} />
+            <AtwBoard game={game} />
 
             {game.phase === "finale" && (
                 <AtwFinalePanel game={game} onScoreRecorded={onGameChange} />

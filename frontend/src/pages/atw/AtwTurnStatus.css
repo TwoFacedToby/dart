@@ -4,10 +4,8 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-sm);
-    padding: var(--space-lg);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    padding: var(--space-lg) 0;
+    border-top: 1px solid var(--color-border);
 }
 
 .atw-turn-status__who {
@@ -20,12 +18,7 @@
     font-family: var(--font-mono);
     font-weight: 700;
     font-size: var(--font-size-xl);
-    color: var(--color-accent);
-}
-
-.atw-turn-status__name {
-    font-size: var(--font-size-xl);
-    font-weight: 600;
+    color: var(--color-highlight);
 }
 
 .atw-turn-status__target {
@@ -35,8 +28,6 @@
 
 .atw-turn-status__arrow {
     padding: var(--space-xs) var(--space-md);
-    background: var(--color-bg);
-    border-radius: var(--radius-sm);
     color: var(--color-text-secondary);
 }
 
@@ -67,7 +58,7 @@
     border-radius: var(--radius-sm);
     font-size: var(--font-size-sm);
     font-weight: 600;
-    color: #ffffff;
+    color: var(--color-bg);
 }
 
 .atw-turn-status__arrow-chip--hit {

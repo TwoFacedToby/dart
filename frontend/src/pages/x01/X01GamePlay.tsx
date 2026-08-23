@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { recordX01Turn, reorderX01, undoX01, discardX01Game, type X01GameState } from "../../api";
 import { X01InputPanel } from "./X01InputPanel";
-import { DiscardGameButton } from "../../components/discard-game/DiscardGameButton";
+import { SettingsMenu } from "../../components/game-controls/SettingsMenu";
+import { UndoButton } from "../../components/game-controls/UndoButton";
 
 import "./X01GamePlay.css";
 
@@ -50,14 +51,24 @@ export function X01GamePlay({ game, onGameChange, onGameEnded }: X01GamePlayProp
     }
 
     const orderedParticipants = [...game.participants].sort((a, b) => a.turn_order - b.turn_order);
+    const orderItems = orderedParticipants.map(p => ({
+        id: p.id,
+        label: p.player.initials,
+        locked: p.id === game.current_participant_id,
+    }));
+    const canReorder = game.status !== "finished";
 
     return (
         <div className="page">
             <div className="x01-game-play__header">
                 <h1 className="page__title">{game.starting_score}</h1>
                 <div className="x01-game-play__header-actions">
-                    <button className="btn btn-secondary" onClick={handleUndo}>Undo last</button>
-                    <DiscardGameButton onDiscard={() => discardX01Game(game.id).then(onGameEnded)} />
+                    <UndoButton onUndo={handleUndo} />
+                    <SettingsMenu
+                        orderItems={canReorder ? orderItems : undefined}
+                        onMove={canReorder ? handleMove : undefined}
+                        onDiscard={() => discardX01Game(game.id).then(onGameEnded)}
+                    />
                 </div>
             </div>
 
@@ -65,7 +76,7 @@ export function X01GamePlay({ game, onGameChange, onGameEnded }: X01GamePlayProp
 
             {game.status === "finished" ? (
                 <div className="game-banner game-banner--success">
-                    Game over, winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.name ?? "-"}
+                    Game over, winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"}
                     <button className="btn btn-primary" onClick={onGameEnded}>Start a new game</button>
                 </div>
             ) : (
@@ -74,14 +85,10 @@ export function X01GamePlay({ game, onGameChange, onGameEnded }: X01GamePlayProp
 
             <h2 className="section-subtitle">Order</h2>
             <ul className="x01-game-play__list">
-                {orderedParticipants.map((p, idx) => (
+                {orderedParticipants.map(p => (
                     <li key={p.id} className={`x01-game-play__item${p.id === game.current_participant_id ? " x01-game-play__item--current" : ""}`}>
-                        <span className="x01-game-play__name">{p.player.initials} {p.player.name}</span>
+                        <span className="x01-game-play__name">{p.player.initials}</span>
                         <span className="x01-game-play__remaining">{p.remaining_score}</span>
-                        <span className="x01-game-play__controls">
-                            <button className="btn btn-secondary" disabled={idx === 0} onClick={() => handleMove(p.id, "up")}>▲</button>
-                            <button className="btn btn-secondary" disabled={idx === orderedParticipants.length - 1} onClick={() => handleMove(p.id, "down")}>▼</button>
-                        </span>
                     </li>
                 ))}
             </ul>

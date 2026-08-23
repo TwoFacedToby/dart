@@ -14,10 +14,10 @@ export function CricketGameDisplay({ game }: CricketGameDisplayProps) {
 
             {game.status === "finished" ? (
                 <div className="game-banner game-banner--success game-banner--large">
-                    {game.participants.find(p => p.player.id === game.winner_id)?.player.name ?? "-"} wins!
+                    {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"} wins!
                 </div>
             ) : current ? (
-                <div className="game-banner game-banner--large">{current.player.name}'s turn</div>
+                <div className="game-banner game-banner--large">{current.player.initials}'s turn</div>
             ) : null}
 
             <CricketBoard game={game} big />

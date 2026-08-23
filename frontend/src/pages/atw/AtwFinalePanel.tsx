@@ -64,7 +64,7 @@ export function AtwFinalePanel({ game, onScoreRecorded }: AtwFinalePanelProps) {
                         const hasThisRound = scores.length >= round;
                         return (
                             <tr key={f.id}>
-                                <td>{f.player.initials} - {f.player.name}</td>
+                                <td>{f.player.initials}</td>
                                 {[0, 1, 2].map(i => <td key={i}>{scores[i] ?? "-"}</td>)}
                                 <td>{scores.reduce((a, b) => a + b, 0)}</td>
                                 <td>

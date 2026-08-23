@@ -26,7 +26,6 @@ export function AtwTurnStatus({ game }: AtwTurnStatusProps) {
         <div className="atw-turn-status">
             <div className="atw-turn-status__who">
                 <span className="atw-turn-status__initials">{current.player.initials}</span>
-                <span className="atw-turn-status__name">{current.player.name}</span>
                 <span className="atw-turn-status__target">aiming for {current.current_number}</span>
             </div>
 

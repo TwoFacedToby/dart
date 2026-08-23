@@ -19,8 +19,8 @@
 }
 
 .stats-tabs__btn--active {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
+    color: var(--color-highlight);
+    border-bottom-color: var(--color-highlight);
 }
 
 .stats-chart-row {
@@ -49,10 +49,8 @@
 }
 
 .stats-comparison__card {
-    padding: var(--space-md);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--color-border);
 }
 
 .stats-comparison__name {

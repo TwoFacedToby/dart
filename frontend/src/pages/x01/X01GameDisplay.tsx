@@ -13,7 +13,7 @@ export function X01GameDisplay({ game }: X01GameDisplayProps) {
 
             {game.status === "finished" && (
                 <div className="game-banner game-banner--success game-banner--large">
-                    {game.participants.find(p => p.player.id === game.winner_id)?.player.name ?? "-"} wins!
+                    {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"} wins!
                 </div>
             )}
 
@@ -23,7 +23,7 @@ export function X01GameDisplay({ game }: X01GameDisplayProps) {
                         key={p.id}
                         className={`x01-game-display__row${p.id === game.current_participant_id ? " x01-game-display__row--current" : ""}`}
                     >
-                        <span className="x01-game-display__name">{p.player.name}</span>
+                        <span className="x01-game-display__name">{p.player.initials}</span>
                         <span className="x01-game-display__remaining">{p.remaining_score}</span>
                     </div>
                 ))}

@@ -5,7 +5,6 @@ import "./CricketBoard.css";
 interface CricketBoardProps {
     game: CricketGameState;
     big?: boolean;
-    onMove?: (participantId: string, direction: "up" | "down") => void;
 }
 
 const ROWS: { key: keyof CricketGameState["participants"][number]["marks"]; label: string }[] = [
@@ -25,11 +24,11 @@ function marksDisplay(n: number): string {
     return "-";
 }
 
-// Shared marks table used by both the editor (compact, with reorder controls
-// when onMove is passed) and viewer (big, read-only). Players run across the
-// columns, target numbers down the rows, with the running score in the
-// bottom row.
-export function CricketBoard({ game, big, onMove }: CricketBoardProps) {
+// Shared marks table used by both the editor (compact) and viewer (big).
+// Players run across the columns, target numbers down the rows, with the
+// running score in the bottom row. Turn order is changed through the
+// settings menu, not here.
+export function CricketBoard({ game, big }: CricketBoardProps) {
     const participants = [...game.participants].sort((a, b) => a.turn_order - b.turn_order);
 
     return (
@@ -37,34 +36,12 @@ export function CricketBoard({ game, big, onMove }: CricketBoardProps) {
             <thead>
                 <tr>
                     <th className="cricket-board__corner"></th>
-                    {participants.map((p, idx) => (
+                    {participants.map(p => (
                         <th
                             key={p.id}
                             className={p.id === game.current_participant_id ? "cricket-board__col--current" : ""}
                         >
-                            <div className="cricket-board__player-header">
-                                <span className="cricket-board__player">{big ? p.player.name : `${p.player.initials} ${p.player.name}`}</span>
-                                {onMove && (
-                                    <span className="cricket-board__move-controls">
-                                        <button
-                                            type="button"
-                                            className="btn btn-secondary"
-                                            disabled={idx === 0}
-                                            onClick={() => onMove(p.id, "up")}
-                                        >
-                                            ◀
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn-secondary"
-                                            disabled={idx === participants.length - 1}
-                                            onClick={() => onMove(p.id, "down")}
-                                        >
-                                            ▶
-                                        </button>
-                                    </span>
-                                )}
-                            </div>
+                            <span className="cricket-board__player">{p.player.initials}</span>
                         </th>
                     ))}
                 </tr>

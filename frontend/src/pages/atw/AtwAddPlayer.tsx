@@ -40,7 +40,11 @@ export function AtwAddPlayer({ game, onAdded }: AtwAddPlayerProps) {
 
     return (
         <>
-            <button className="atw-add-player-btn" onClick={() => setOpen(true)} aria-label="Add player">+</button>
+            <button className="icon-btn" onClick={() => setOpen(true)} aria-label="Add player">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+            </button>
 
             {open && (
                 <Modal title="Add a player" onClose={() => setOpen(false)}>

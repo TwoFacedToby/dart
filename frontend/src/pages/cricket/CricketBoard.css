@@ -19,30 +19,14 @@
     font-weight: 600;
 }
 
-.cricket-board__player-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-xs);
-}
-
 .cricket-board__player {
     display: block;
     max-width: 140px;
+    font-family: var(--font-mono);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.cricket-board__move-controls {
-    display: flex;
-    gap: var(--space-xs);
-}
-
-.cricket-board__move-controls .btn {
-    padding: 0 var(--space-xs);
-    line-height: 1.6;
 }
 
 .cricket-board__closed {
@@ -55,7 +39,7 @@
 }
 
 .cricket-board__col--current {
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    border-bottom: 3px solid var(--color-highlight);
 }
 
 .cricket-board--big th,

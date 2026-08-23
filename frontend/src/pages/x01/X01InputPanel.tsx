@@ -40,7 +40,6 @@ export function X01InputPanel({ game, onSubmit, disabled }: X01InputPanelProps) 
         <div className="x01-input">
             <div className="x01-input__who">
                 <span className="x01-input__initials">{current.player.initials}</span>
-                <span className="x01-input__name">{current.player.name}'s turn</span>
                 <span className="x01-input__remaining">{current.remaining_score} left</span>
             </div>
 

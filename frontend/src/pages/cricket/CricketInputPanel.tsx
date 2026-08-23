@@ -18,7 +18,6 @@ export function CricketInputPanel({ game, onThrow, disabled }: CricketInputPanel
         <div className="cricket-input">
             <div className="cricket-input__who">
                 <span className="cricket-input__initials">{current.player.initials}</span>
-                <span className="cricket-input__name">{current.player.name}'s turn</span>
             </div>
 
             <div className="cricket-input__arrow">

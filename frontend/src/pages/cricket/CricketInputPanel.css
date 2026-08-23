@@ -2,10 +2,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
-    padding: var(--space-lg);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    padding: var(--space-lg) 0;
+    border-top: 1px solid var(--color-border);
     width: 320px;
     flex-shrink: 0;
 }
@@ -20,18 +18,11 @@
     font-family: var(--font-mono);
     font-weight: 700;
     font-size: var(--font-size-xl);
-    color: var(--color-accent);
-}
-
-.cricket-input__name {
-    font-size: var(--font-size-xl);
-    font-weight: 600;
+    color: var(--color-highlight);
 }
 
 .cricket-input__arrow {
-    padding: var(--space-sm) var(--space-md);
-    background: var(--color-bg);
-    border-radius: var(--radius-sm);
+    padding: var(--space-sm) 0;
     text-align: center;
     color: var(--color-text-secondary);
     font-size: var(--font-size-md);

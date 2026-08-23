@@ -1,0 +1,21 @@
+.undo-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.undo-button:hover:not(:disabled) {
+    background: var(--color-surface-hover);
+}
+
+.undo-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
