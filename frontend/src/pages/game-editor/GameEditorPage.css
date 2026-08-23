@@ -1,0 +1,5 @@
+.game-editor__type-picker {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}

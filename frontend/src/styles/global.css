@@ -1,0 +1,35 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body, #root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+    background: var(--color-bg);
+}
+
+a {
+    color: var(--color-accent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.page__title {
+    font-size: var(--font-size-lg);
+    margin: 0;
+}

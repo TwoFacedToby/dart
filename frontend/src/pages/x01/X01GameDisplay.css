@@ -1,0 +1,29 @@
+.x01-game-display__board {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.x01-game-display__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-lg);
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.x01-game-display__row--current {
+    border-color: var(--color-accent);
+}
+
+.x01-game-display__name {
+    font-size: var(--font-size-xl);
+}
+
+.x01-game-display__remaining {
+    font-size: var(--font-size-display);
+    font-weight: 700;
+    font-family: var(--font-mono);
+}

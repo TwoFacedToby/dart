@@ -1,0 +1,95 @@
+.cricket-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    width: 320px;
+    flex-shrink: 0;
+}
+
+.cricket-input__who {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+}
+
+.cricket-input__initials {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: var(--font-size-xl);
+    color: var(--color-accent);
+}
+
+.cricket-input__name {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+}
+
+.cricket-input__arrow {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-bg);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+}
+
+.cricket-input__arrow-num {
+    color: var(--color-text);
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+}
+
+.cricket-input__column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.cricket-input__number-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.cricket-input__number-label {
+    width: 40px;
+    flex-shrink: 0;
+    font-weight: 700;
+    text-align: center;
+}
+
+.cricket-input__btn {
+    flex: 1;
+    height: 52px;
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    background: var(--color-success);
+    color: #ffffff;
+    border-radius: var(--radius-sm);
+}
+
+.cricket-input__btn:hover:not(:disabled) {
+    background: var(--color-success-hover);
+}
+
+.cricket-input__btn--wide {
+    font-size: var(--font-size-md);
+}
+
+.cricket-input__miss {
+    height: 52px;
+    margin-top: var(--space-sm);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    background: var(--color-danger);
+    color: #ffffff;
+    border-radius: var(--radius-sm);
+}
+
+.cricket-input__miss:hover:not(:disabled) {
+    background: var(--color-danger-hover);
+}

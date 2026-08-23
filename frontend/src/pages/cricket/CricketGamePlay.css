@@ -1,0 +1,23 @@
+.cricket-game-play__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cricket-game-play__header-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.cricket-game-play__layout {
+    display: flex;
+    gap: var(--space-lg);
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.cricket-game-play__board {
+    flex: 1;
+    min-width: 320px;
+    overflow-x: auto;
+}

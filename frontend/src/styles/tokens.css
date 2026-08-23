@@ -1,0 +1,46 @@
+:root {
+    /* Colors - dark theme, dartboard-inspired */
+    --color-bg: #3a3a3a;
+    --color-surface: #454545;
+    --color-surface-hover: #505050;
+    --color-border: #5a5a5a;
+    --color-text: #f2f1ee;
+    --color-text-secondary: #b3b0aa;
+    --color-accent: #3f9142;
+    --color-accent-hover: #357a38;
+    --color-danger: #d13b3b;
+    --color-danger-hover: #b52f2f;
+
+    /* Fonts */
+    --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "SFMono-Regular", Consolas, monospace;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.85rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.75rem;
+    --font-size-2xl: 2.5rem;
+    --font-size-display: 5rem;
+
+    /* Status colors */
+    --color-success: #3f9142;
+    --color-success-hover: #357a38;
+    --color-warning: #d9982f;
+    --color-warning-bg: color-mix(in srgb, var(--color-warning) 20%, transparent);
+    --color-badge-single: #262626;
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+
+    /* Layout */
+    --sidebar-width: 220px;
+    --topbar-height: 56px;
+}

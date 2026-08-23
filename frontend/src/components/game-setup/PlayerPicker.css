@@ -1,0 +1,10 @@
+.player-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.player-picker__initials {
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
