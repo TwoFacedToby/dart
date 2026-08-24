@@ -4,6 +4,7 @@ export interface AtwPlayerRef {
     id: string;
     name: string;
     initials: string;
+    win_streak: number;
 }
 
 export interface AtwParticipant {

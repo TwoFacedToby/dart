@@ -1,4 +1,5 @@
 export * from "./client";
+export * from "./endpoints/auth";
 export * from "./endpoints/players";
 export * from "./endpoints/atw";
 export * from "./endpoints/cricket";

@@ -77,8 +77,15 @@ export function CricketGamePlay({ game, onGameChange, onGameEnded }: CricketGame
 
             {game.status === "finished" && (
                 <div className="game-banner game-banner--success">
-                    Game over, winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"}
+                    Winner: {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"},
+                    2nd: {game.participants.find(p => p.player.id === game.second_place_id)?.player.initials ?? "-"}
                     <button className="btn btn-primary" onClick={onGameEnded}>Start a new game</button>
+                </div>
+            )}
+
+            {game.status !== "finished" && game.participants.some(p => p.finish_order === 1) && (
+                <div className="game-banner">
+                    {game.participants.find(p => p.finish_order === 1)?.player.initials} closed out first. Still playing for 2nd.
                 </div>
             )}
 

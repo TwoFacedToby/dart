@@ -32,7 +32,12 @@ export function AtwBoard({ game, big }: AtwBoardProps) {
                         key={p.id}
                         className={`atw-board__header-cell${p.id === game.current_participant_id ? " atw-board__header-cell--current" : ""}${p.finished ? " atw-board__header-cell--finished" : ""}`}
                     >
-                        <span className="atw-board__player-name">{p.player.initials}</span>
+                        <span className="atw-board__player-name">
+                            {p.player.initials}
+                            {p.player.win_streak >= 2 && (
+                                <sup className="atw-board__streak">{p.player.win_streak}</sup>
+                            )}
+                        </span>
                         <span className="atw-board__player-number">{p.current_number}</span>
 
                         {p.behind_by >= 5 && !p.finished && !p.catching_up && (

@@ -32,7 +32,7 @@ export function PlayerPicker({ selectedIds, onChange }: PlayerPickerProps) {
                 <button
                     key={p.id}
                     type="button"
-                    className={`chip${selectedIds.includes(p.id) ? " chip--selected" : ""}`}
+                    className={`game-editor__type-btn player-picker__btn${selectedIds.includes(p.id) ? " game-editor__type-btn--selected" : ""}`}
                     onClick={() => toggle(p.id)}
                 >
                     <span className="player-picker__initials">{p.initials}</span>

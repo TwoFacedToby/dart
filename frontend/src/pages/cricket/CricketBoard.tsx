@@ -17,11 +17,18 @@ const ROWS: { key: keyof CricketGameState["participants"][number]["marks"]; labe
     { key: "bull", label: "Bull" },
 ];
 
-function marksDisplay(n: number): string {
-    if (n >= 3) return "X";
-    if (n === 2) return "II";
-    if (n === 1) return "I";
-    return "-";
+function CricketMark({ count }: { count: number }) {
+    if (count >= 3) {
+        return (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="cricket-board__mark-icon">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M9 9l6 6M15 9l-6 6" />
+            </svg>
+        );
+    }
+    if (count === 2) return <span>X</span>;
+    if (count === 1) return <span>/</span>;
+    return <span>-</span>;
 }
 
 // Shared marks table used by both the editor (compact) and viewer (big).
@@ -41,7 +48,10 @@ export function CricketBoard({ game, big }: CricketBoardProps) {
                             key={p.id}
                             className={p.id === game.current_participant_id ? "cricket-board__col--current" : ""}
                         >
-                            <span className="cricket-board__player">{p.player.initials}</span>
+                            <span className="cricket-board__player">
+                                {p.player.initials}
+                                {p.finish_order && <sup className="cricket-board__place">{p.finish_order}</sup>}
+                            </span>
                         </th>
                     ))}
                 </tr>
@@ -55,7 +65,7 @@ export function CricketBoard({ game, big }: CricketBoardProps) {
                                 key={p.id}
                                 className={p.marks[r.key] >= 3 ? "cricket-board__closed" : ""}
                             >
-                                {marksDisplay(p.marks[r.key])}
+                                <CricketMark count={p.marks[r.key]} />
                             </td>
                         ))}
                     </tr>

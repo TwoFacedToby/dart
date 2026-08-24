@@ -3,7 +3,12 @@ import "./styles/global.css";
 import "./styles/forms.css";
 
 import { AppRouter } from "./router/AppRouter";
+import { AuthGate } from "./components/auth/AuthGate";
 
 export default function App() {
-    return <AppRouter />;
+    return (
+        <AuthGate>
+            <AppRouter />
+        </AuthGate>
+    );
 }

@@ -34,6 +34,17 @@
     font-weight: 700;
 }
 
+.cricket-board__mark-icon {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.cricket-board__place {
+    color: var(--color-success);
+    font-size: 0.7em;
+    margin-left: 2px;
+}
+
 .cricket-board__score {
     font-weight: 700;
 }
@@ -50,4 +61,9 @@
 
 .cricket-board--big .cricket-board__score {
     font-size: var(--font-size-xl);
+}
+
+.cricket-board--big .cricket-board__mark-icon {
+    width: 26px;
+    height: 26px;
 }

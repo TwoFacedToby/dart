@@ -75,7 +75,7 @@ a:hover {
 }
 
 .btn-primary {
-    color: var(--color-bg);
+    color: var(--color-highlight);
     background: var(--color-accent);
     font-weight: 600;
 }
@@ -94,7 +94,7 @@ a:hover {
 }
 
 .btn-danger {
-    color: var(--color-bg);
+    color: var(--color-highlight);
     background: var(--color-danger);
     font-weight: 600;
 }
@@ -145,6 +145,25 @@ a:hover {
 .icon-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+.game-editor__type-btn {
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.game-editor__type-btn:hover {
+    background: var(--color-surface-hover);
+}
+
+.game-editor__type-btn--selected {
+    border-color: var(--color-highlight);
 }
 
 .setup-start-btn {

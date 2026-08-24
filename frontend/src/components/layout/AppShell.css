@@ -36,6 +36,7 @@
 .app-shell__nav-link:hover {
     background: var(--color-surface-hover);
     color: var(--color-text);
+    text-decoration: none;
 }
 
 .app-shell__main {

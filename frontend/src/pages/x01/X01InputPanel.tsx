@@ -18,17 +18,34 @@ function checkoutSuggestion(remaining: number): string | null {
     return null;
 }
 
+// Lets a turn be entered as "38+19+3" instead of doing the addition by
+// hand. Splits on "+", requires every term to be a plain non-negative
+// whole number, and sums them -- a single plain number (no "+" at all)
+// works the same way it always did.
+function evaluateEntry(raw: string): number | null {
+    const terms = raw.split("+").map(t => t.trim());
+    if (terms.some(t => t === "")) return null;
+
+    let total = 0;
+    for (const term of terms) {
+        if (!/^\d+$/.test(term)) return null;
+        total += Number(term);
+    }
+    return total;
+}
+
 export function X01InputPanel({ game, onSubmit, disabled }: X01InputPanelProps) {
     const [value, setValue] = useState("");
     const current = game.participants.find(p => p.id === game.current_participant_id);
     if (!current) return null;
 
     const checkout = checkoutSuggestion(current.remaining_score);
+    const evaluated = evaluateEntry(value);
+    const valid = evaluated !== null && evaluated >= 0 && evaluated <= 180;
 
     function submit() {
-        const score = Number(value);
-        if (!Number.isFinite(score) || score < 0 || score > 180) return;
-        onSubmit(score);
+        if (evaluated === null || evaluated < 0 || evaluated > 180) return;
+        onSubmit(evaluated);
         setValue("");
     }
 
@@ -50,21 +67,20 @@ export function X01InputPanel({ game, onSubmit, disabled }: X01InputPanelProps) 
             <div className="x01-input__entry">
                 <input
                     className="form-input x01-input__field"
-                    type="number"
-                    min={0}
-                    max={180}
+                    type="text"
+                    inputMode="numeric"
                     value={value}
                     onChange={e => setValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Turn score"
+                    placeholder="Turn score, e.g. 38+19+3"
                     autoFocus
                 />
                 <button
-                    className="btn btn-primary"
-                    disabled={disabled || value === "" || Number(value) < 0 || Number(value) > 180}
+                    className="btn btn-primary x01-input__submit"
+                    disabled={disabled || value === "" || !valid}
                     onClick={submit}
                 >
-                    Submit
+                    {evaluated !== null && value.includes("+") ? `Submit (${evaluated})` : "Submit"}
                 </button>
             </div>
         </div>

@@ -36,6 +36,7 @@ import { getGames as getX01Games } from "../endpoints/x01/getGames";
 import { deleteGame as deleteX01Game } from "../endpoints/x01/deleteGame";
 
 import { getAllStats } from "../endpoints/stats/getAllStats";
+import { getStatsTotals } from "../endpoints/stats/getStatsTotals";
 import { getPlayerStats } from "../endpoints/stats/getPlayerStats";
 import { postCompare } from "../endpoints/stats/postCompare";
 
@@ -81,6 +82,7 @@ delete_(r, "/x01/games", deleteX01Game);
 
 // Stats
 get(r, "/stats", getAllStats);
+get(r, "/stats/totals", getStatsTotals);
 get(r, "/stats/:id", getPlayerStats);
 post(r, "/stats/compare", postCompare);
 

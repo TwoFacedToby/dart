@@ -1,6 +1,7 @@
 .atw-game-play {
     height: 100%;
     min-height: 0;
+    gap: var(--space-xs);
 }
 
 .atw-game-play__header {
@@ -8,6 +9,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.atw-game-play__header .page__title {
+    font-size: var(--font-size-md);
 }
 
 .atw-game-play__header-actions {

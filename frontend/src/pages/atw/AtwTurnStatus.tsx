@@ -34,30 +34,30 @@ export function AtwTurnStatus({ game }: AtwTurnStatusProps) {
                 {!turn.in_bonus && <span> of 3</span>}
             </div>
 
-            {turn.catchup_active && (
-                <div className="atw-turn-status__tag atw-turn-status__tag--catchup">Catch-up turn, doubles and triples count in full</div>
-            )}
-            {turn.in_bonus && (
-                <div className="atw-turn-status__tag atw-turn-status__tag--bonus">Bonus dart, keep going until you miss</div>
-            )}
-            {current.catching_up && (
-                <div className="atw-turn-status__tag atw-turn-status__tag--catchup">
-                    Catching up, {current.catchup_target} turn{current.catchup_target === 1 ? "" : "s"} total before joining normal rotation
-                </div>
-            )}
+            <div className="atw-turn-status__tags">
+                {turn.catchup_active && (
+                    <div className="atw-turn-status__tag atw-turn-status__tag--catchup">Catch-up turn, doubles and triples count in full</div>
+                )}
+                {turn.in_bonus && (
+                    <div className="atw-turn-status__tag atw-turn-status__tag--bonus">Bonus dart, keep going until you miss</div>
+                )}
+                {!turn.catchup_active && current.catching_up && (
+                    <div className="atw-turn-status__tag atw-turn-status__tag--catchup">
+                        Catching up, {current.catchup_target} turn{current.catchup_target === 1 ? "" : "s"} total before joining normal rotation
+                    </div>
+                )}
+            </div>
 
-            {turn.throws.length > 0 && (
-                <div className="atw-turn-status__arrows">
-                    {turn.throws.map(t => (
-                        <span
-                            key={t.dart_index}
-                            className={`atw-turn-status__arrow-chip${t.result === "miss" ? " atw-turn-status__arrow-chip--miss" : " atw-turn-status__arrow-chip--hit"}`}
-                        >
-                            {RESULT_LABEL[t.result]}
-                        </span>
-                    ))}
-                </div>
-            )}
+            <div className="atw-turn-status__arrows">
+                {turn.throws.map(t => (
+                    <span
+                        key={t.dart_index}
+                        className={`atw-turn-status__arrow-chip${t.result === "miss" ? " atw-turn-status__arrow-chip--miss" : " atw-turn-status__arrow-chip--hit"}`}
+                    >
+                        {RESULT_LABEL[t.result]}
+                    </span>
+                ))}
+            </div>
         </div>
     );
 }

@@ -29,6 +29,7 @@ export interface AtwGameRow extends RowDataPacket {
     turn_in_bonus: number;
     turn_catchup: number;
     finishers_json: string | null;
+    bonus_rounds_remaining: number;
     start_streaks_json: string | null;
     winner_id: string | null;
     created_at: string;
@@ -50,6 +51,7 @@ export interface AtwParticipantRow extends RowDataPacket {
     id_seq: number;
     player_name?: string;
     player_initials?: string;
+    player_win_streak?: number;
 }
 
 export async function loadGame(gameId: string): Promise<AtwGameRow> {
@@ -60,7 +62,7 @@ export async function loadGame(gameId: string): Promise<AtwGameRow> {
 
 export async function loadParticipants(gameId: string): Promise<AtwParticipantRow[]> {
     const [rows] = await db.query<AtwParticipantRow[]>(`
-        SELECT p.*, pl.name as player_name, pl.initials as player_initials, ids.seq as id_seq
+        SELECT p.*, pl.name as player_name, pl.initials as player_initials, pl.atw_win_streak as player_win_streak, ids.seq as id_seq
         FROM atw_participants p
                  JOIN players pl ON pl.id = p.player_id
                  JOIN ids ON ids.id = p.id
@@ -117,6 +119,22 @@ function insertAtRotationEnd(queue: string[], byId: Map<string, AtwParticipantRo
     }
     if (wrapIndex === -1) return [...queue, participantId];
     return [...queue.slice(0, wrapIndex), participantId, ...queue.slice(wrapIndex)];
+}
+
+// Given the queue right after popping a just-finished participant, keeps
+// only the entries still due *this* lap. The queue is a continuous FIFO
+// where finishing a normal turn re-queues you at the back for next lap,
+// so at any moment it actually contains "everyone left this lap" followed
+// by "everyone who already went this lap, waiting for next lap" -- the
+// join point between them is wherever turn_order wraps back down. Without
+// this trim, a finish would incorrectly hand a bonus "everyone still gets
+// their turn" turn to people who'd already had theirs this round.
+function trimToCurrentLap(queue: string[], byId: Map<string, AtwParticipantRow>): string[] {
+    const orderOf = (id: string) => byId.get(id)?.turn_order ?? 0;
+    for (let i = 1; i < queue.length; i++) {
+        if (orderOf(queue[i]) < orderOf(queue[i - 1])) return queue.slice(0, i);
+    }
+    return queue;
 }
 
 async function countTurnsTaken(gameId: string, participantId: string): Promise<number> {
@@ -195,9 +213,20 @@ export async function recordThrow(gameId: string, result: ThrowResult, opts: { s
 
     let newNumber = participant.current_number + advancement;
     let justFinished = false;
-    if (newNumber >= 20) {
+    if (participant.current_number >= 20) {
+        // Already aiming at 20: any hit finishes (the multiplier doesn't
+        // matter once you're here, you just need to land the dart), a
+        // miss leaves you aiming at 20 again next time.
         newNumber = 20;
-        if (!participant.finished) justFinished = true;
+        if (result !== "miss" && !participant.finished) justFinished = true;
+    } else if (newNumber > 20) {
+        // Catch-up's extra advancement can carry the raw arithmetic past
+        // 20, but you can never skip actually being at 20 -- it caps you
+        // there, aiming at 20 next, same as ordinary advancement landing
+        // exactly on 20 does. Only a genuine overshoot (raw > 20) needs
+        // capping; landing exactly on 20 is the normal, correct way to
+        // start aiming at it and must not be clamped down.
+        newNumber = 20;
     }
 
     dartCount = dartIndex;
@@ -239,37 +268,28 @@ export async function recordThrow(gameId: string, result: ThrowResult, opts: { s
     if (turnEnds) {
         // Pop the front of the queue; decide whether/where to re-queue.
         let newQueue = queue.slice(1);
+        let bonusRoundsRemaining = game.bonus_rounds_remaining;
 
         if (justFinished && phase === "normal") {
-            // First finisher of the game: everyone currently behind them in
-            // the queue still gets their turn ("the people after them in
-            // turn order still gets their turn"). Since re-queueing only
-            // ever appends to the back, `newQueue` right now already is
-            // exactly "this lap's remaining players" — nothing further to
-            // add for the base rule.
+            // First finisher of the game. Only the participants still due
+            // *this* lap get the guaranteed "everyone still gets their
+            // turn" round -- anyone already re-queued for next lap
+            // already had theirs.
             phase = "ending";
             status = "active"; // status stays simple; `phase` carries the detail for the UI
             finishers = [participantId];
+            newQueue = trimToCurrentLap(newQueue, byId);
 
-            // Win-streak bonus: "won twice in a row and finishes a third
-            // game first" = extra turns. Interpreted as: streak-of-3 gives
-            // 1 extra turn, streak-of-4 gives 2, etc. (extra = streak - 2).
-            // Awarded as one additional turn each to the best-placed
-            // remaining active players, to raise the odds of a finale.
+            // Win-streak bonus: winning N in a row (N >= 2) earns N - 1
+            // extra full rounds for everyone still active, on top of the
+            // guaranteed round above, to raise the odds of a finale
+            // against a player who's been dominating.
             const [[playerRow]] = await db.query<RowDataPacket[]>(
                 `SELECT atw_win_streak FROM players WHERE id = ?`,
                 [participant.player_id]
             );
-            const prospectiveStreak = (playerRow?.atw_win_streak ?? 0) + 1;
-            const extra = Math.max(0, prospectiveStreak - 2);
-            if (extra > 0) {
-                const stillActive = participants
-                    .filter(p => p.id !== participantId && !p.finished)
-                    .sort((a, b) => b.current_number - a.current_number)
-                    .slice(0, extra)
-                    .map(p => p.id);
-                newQueue = [...newQueue, ...stillActive];
-            }
+            const priorStreak = playerRow?.atw_win_streak ?? 0;
+            bonusRoundsRemaining = Math.max(0, priorStreak - 1);
         } else if (justFinished && phase === "ending") {
             finishers = [...finishers, participantId];
         }
@@ -298,15 +318,39 @@ export async function recordThrow(gameId: string, result: ThrowResult, opts: { s
         // simply drop out of the queue; the round is wrapping up.
 
         if (newQueue.length === 0 && phase === "ending") {
-            if (finishers.length === 1) {
-                phase = "finished";
-                status = "finished";
-                winnerId = participants.find(p => p.id === finishers[0])?.player_id ?? null;
-                finishedAt = new Date();
-                await applyStreaks(gameId, winnerId, participants);
-            } else if (finishers.length >= 2) {
-                phase = "finale";
-                status = "finale";
+            if (bonusRoundsRemaining > 0) {
+                // The guaranteed round (or a previous bonus round) just
+                // wrapped up and the winner is still ahead by however
+                // many wins in a row -- give everyone still active one
+                // more full round to try to catch them. Whoever just
+                // threw stays eligible unless this very dart is what
+                // finished them (justFinished) -- an ordinary, non-
+                // finishing turn doesn't remove them from the next
+                // bonus round. Anyone who does finish during a bonus
+                // round joins `finishers` above like normal.
+                const stillActiveIds = participants
+                    .filter(p => !p.finished && !(justFinished && p.id === participantId))
+                    .sort((a, b) => a.turn_order - b.turn_order)
+                    .map(p => p.id);
+                if (stillActiveIds.length > 0) {
+                    newQueue = stillActiveIds;
+                    bonusRoundsRemaining -= 1;
+                } else {
+                    bonusRoundsRemaining = 0;
+                }
+            }
+
+            if (newQueue.length === 0) {
+                if (finishers.length === 1) {
+                    phase = "finished";
+                    status = "finished";
+                    winnerId = participants.find(p => p.id === finishers[0])?.player_id ?? null;
+                    finishedAt = new Date();
+                    await applyStreaks(gameId, winnerId, participants);
+                } else if (finishers.length >= 2) {
+                    phase = "finale";
+                    status = "finale";
+                }
             }
         }
 
@@ -316,10 +360,10 @@ export async function recordThrow(gameId: string, result: ThrowResult, opts: { s
 
         await db.query(
             `UPDATE atw_games SET turn_queue = ?, turn_index = ?, turn_dart_count = ?, turn_all_hit = ?, turn_in_bonus = ?, turn_catchup = ?,
-                                  phase = ?, status = ?, finishers_json = ?, winner_id = ?, finished_at = ?
+                                  phase = ?, status = ?, finishers_json = ?, winner_id = ?, finished_at = ?, bonus_rounds_remaining = ?
              WHERE id = ?`,
             [JSON.stringify(newQueue), turnIndex, dartCount, turnAllHit, turnInBonus, false,
-                phase, status, JSON.stringify(finishers), winnerId, finishedAt, gameId]
+                phase, status, JSON.stringify(finishers), winnerId, finishedAt, bonusRoundsRemaining, gameId]
         );
     } else {
         await db.query(
@@ -376,7 +420,7 @@ export async function getState(gameId: string) {
         leader_number: leader,
         participants: participants.map(p => ({
             id: p.id,
-            player: { id: p.player_id, name: p.player_name, initials: p.player_initials },
+            player: { id: p.player_id, name: p.player_name, initials: p.player_initials, win_streak: p.player_win_streak ?? 0 },
             turn_order: p.turn_order,
             current_number: p.current_number,
             finished: !!p.finished,
@@ -703,7 +747,7 @@ async function resetAndReplay(gameId: string): Promise<void> {
 
     await db.query(
         `UPDATE atw_games SET phase = 'normal', status = 'active', turn_queue = ?, turn_index = 0, turn_dart_count = 0,
-                              turn_all_hit = 1, turn_in_bonus = 0, turn_catchup = 0, finishers_json = NULL, winner_id = NULL, finished_at = NULL
+                              turn_all_hit = 1, turn_in_bonus = 0, turn_catchup = 0, finishers_json = NULL, bonus_rounds_remaining = 0, winner_id = NULL, finished_at = NULL
          WHERE id = ?`,
         [JSON.stringify(originalParticipants.map(p => p.id)), gameId]
     );

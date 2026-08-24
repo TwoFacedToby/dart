@@ -22,6 +22,7 @@ export interface CricketParticipant {
     turn_order: number;
     score: number;
     finished: boolean;
+    finish_order: number | null;
     marks: CricketMarks;
 }
 
@@ -29,6 +30,7 @@ export interface CricketGameState {
     id: string;
     status: string;
     winner_id: string | null;
+    second_place_id: string | null;
     created_at: string;
     finished_at: string | null;
     current_turn_order: number;

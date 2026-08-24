@@ -23,6 +23,7 @@ export function PlayerBarChart({ data, valueLabel }: PlayerBarChartProps) {
                     <XAxis dataKey="label" stroke="var(--color-text-secondary)" fontSize={12} />
                     <YAxis stroke="var(--color-text-secondary)" fontSize={12} />
                     <Tooltip
+                        cursor={{ fill: "var(--color-surface-hover)" }}
                         contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 6 }}
                         labelStyle={{ color: "var(--color-text)" }}
                         formatter={(value: number) => [value, valueLabel]}

@@ -28,13 +28,18 @@
 .x01-input__entry {
     display: flex;
     gap: var(--space-sm);
-    max-width: 300px;
+    max-width: 420px;
 }
 
 .x01-input__field {
     flex: 1;
     height: 56px;
     font-size: var(--font-size-lg);
+}
+
+.x01-input__submit {
+    height: 56px;
+    flex-shrink: 0;
 }
 
 .x01-input__checkout {

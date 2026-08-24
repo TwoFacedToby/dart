@@ -42,6 +42,7 @@ export interface CricketGameRow extends RowDataPacket {
     turn_dart_count: number;
     turn_index: number;
     winner_id: string | null;
+    second_place_id: string | null;
     created_at: string;
     finished_at: string | null;
 }
@@ -60,6 +61,7 @@ export interface CricketParticipantRow extends RowDataPacket {
     marks_20: number;
     marks_bull: number;
     finished: number;
+    finish_order: number | null;
     player_name?: string;
     player_initials?: string;
 }
@@ -130,6 +132,13 @@ export async function recordThrow(gameId: string, target: Target, hitType: HitTy
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [throwId, gameId, current.id, current.player_id, game.turn_index, dartIndex, target, hitType, marksApplied, pointsGivenPerOpponent * penalizedOpponents.length]
         );
+        for (const opponent of penalizedOpponents) {
+            const penaltyId = await createNewId("cricket_penalty");
+            await db.query(
+                `INSERT INTO cricket_penalties (id, game_id, throw_id, from_player_id, to_player_id, points) VALUES (?, ?, ?, ?, ?, ?)`,
+                [penaltyId, gameId, throwId, current.player_id, opponent.player_id, pointsGivenPerOpponent]
+            );
+        }
     }
 
     await db.query(`UPDATE cricket_participants SET ${col} = ? WHERE id = ?`, [newMarks, current.id]);
@@ -139,29 +148,54 @@ export async function recordThrow(gameId: string, target: Target, hitType: HitTy
 
     const updatedCurrent = { ...current, [col]: newMarks } as CricketParticipantRow;
     const penalizedIds = new Set(penalizedOpponents.map(p => p.id));
+    // Only still-active (not already finished) opponents matter for
+    // determining whether this closes out a place -- someone who already
+    // finished is out of contention, their frozen score doesn't count
+    // toward what "lowest score" means for whoever's still playing.
     const otherScores = participants
-        .filter(p => p.id !== current.id)
+        .filter(p => p.id !== current.id && !p.finished)
         .map(p => p.score + (penalizedIds.has(p.id) ? pointsGivenPerOpponent : 0));
     const minOtherScore = otherScores.length ? Math.min(...otherScores) : 0;
 
-    if (hasClosedAll(updatedCurrent) && current.score <= minOtherScore) {
-        await db.query(`UPDATE cricket_participants SET finished = 1 WHERE id = ?`, [current.id]);
-        await db.query(
-            `UPDATE cricket_games SET status = 'finished', winner_id = ?, finished_at = NOW() WHERE id = ?`,
-            [current.player_id, gameId]
-        );
-        return;
+    // Play continues after the first player closes out and holds the
+    // (sole or tied) lowest score among the others still playing --
+    // that just secures 1st place. The game only actually ends once a
+    // second player also does it, securing 2nd; everyone still active
+    // keeps playing until then.
+    let justFinishedOrder: number | null = null;
+    if (!current.finished && hasClosedAll(updatedCurrent) && current.score <= minOtherScore) {
+        justFinishedOrder = 1 + participants.filter(p => p.finished).length;
+        await db.query(`UPDATE cricket_participants SET finished = 1, finish_order = ? WHERE id = ?`, [justFinishedOrder, current.id]);
+
+        if (justFinishedOrder >= 2) {
+            const firstPlace = participants.find(p => p.finished);
+            await db.query(
+                `UPDATE cricket_games SET status = 'finished', winner_id = ?, second_place_id = ?, finished_at = NOW() WHERE id = ?`,
+                [firstPlace?.player_id ?? null, current.player_id, gameId]
+            );
+            return;
+        }
     }
 
-    const turnEnds = dartIndex >= 3;
+    // Closing out ends your turn immediately, same as it always did --
+    // no reason to throw remaining darts once you've secured a place.
+    const turnEnds = dartIndex >= 3 || justFinishedOrder !== null;
     if (turnEnds) {
-        const orders = [...new Set(participants.map(p => p.turn_order))].sort((a, b) => a - b);
-        const idx = orders.indexOf(game.current_turn_order);
-        const nextOrder = orders[(idx + 1) % orders.length];
-        await db.query(
-            `UPDATE cricket_games SET current_turn_order = ?, turn_dart_count = 0, turn_index = turn_index + 1 WHERE id = ?`,
-            [nextOrder, gameId]
-        );
+        const finishedIds = new Set(participants.filter(p => p.finished).map(p => p.id));
+        if (justFinishedOrder !== null) finishedIds.add(current.id);
+
+        const activeOrders = [...new Set(
+            participants.filter(p => !finishedIds.has(p.id)).map(p => p.turn_order)
+        )].sort((a, b) => a - b);
+
+        if (activeOrders.length > 0) {
+            const idx = activeOrders.indexOf(game.current_turn_order);
+            const nextOrder = idx === -1 ? activeOrders[0] : activeOrders[(idx + 1) % activeOrders.length];
+            await db.query(
+                `UPDATE cricket_games SET current_turn_order = ?, turn_dart_count = 0, turn_index = turn_index + 1 WHERE id = ?`,
+                [nextOrder, gameId]
+            );
+        }
     } else {
         await db.query(`UPDATE cricket_games SET turn_dart_count = ? WHERE id = ?`, [dartIndex, gameId]);
     }
@@ -175,10 +209,11 @@ export async function getState(gameId: string) {
         id: game.id,
         status: game.status,
         winner_id: game.winner_id,
+        second_place_id: game.second_place_id,
         created_at: game.created_at,
         finished_at: game.finished_at,
         current_turn_order: game.current_turn_order,
-        current_participant_id: participants.find(p => p.turn_order === game.current_turn_order)?.id ?? null,
+        current_participant_id: participants.find(p => p.turn_order === game.current_turn_order && !p.finished)?.id ?? null,
         turn_dart_count: game.turn_dart_count,
         targets: TARGETS,
         participants: participants.map(p => ({
@@ -187,6 +222,7 @@ export async function getState(gameId: string) {
             turn_order: p.turn_order,
             score: p.score,
             finished: !!p.finished,
+            finish_order: p.finish_order,
             marks: {
                 "15": p.marks_15, "16": p.marks_16, "17": p.marks_17,
                 "18": p.marks_18, "19": p.marks_19, "20": p.marks_20,
@@ -205,13 +241,14 @@ export async function undoLastThrow(gameId: string): Promise<void> {
         [gameId]
     );
     if (!last) throw new AppError("Nothing to undo", 400);
+    await db.query(`DELETE FROM cricket_penalties WHERE throw_id = ?`, [last.id]);
     await db.query(`DELETE FROM cricket_throws WHERE id = ?`, [last.id]);
 
     const participants = await loadParticipants(gameId);
     for (const p of participants) {
         await db.query(
             `UPDATE cricket_participants
-             SET score = 0, marks_15 = 0, marks_16 = 0, marks_17 = 0, marks_18 = 0, marks_19 = 0, marks_20 = 0, marks_bull = 0, finished = 0
+             SET score = 0, marks_15 = 0, marks_16 = 0, marks_17 = 0, marks_18 = 0, marks_19 = 0, marks_20 = 0, marks_bull = 0, finished = 0, finish_order = NULL
              WHERE id = ?`,
             [p.id]
         );
@@ -219,7 +256,7 @@ export async function undoLastThrow(gameId: string): Promise<void> {
 
     const firstOrder = Math.min(...participants.map(p => p.turn_order));
     await db.query(
-        `UPDATE cricket_games SET status = 'active', current_turn_order = ?, turn_dart_count = 0, turn_index = 0, winner_id = NULL, finished_at = NULL WHERE id = ?`,
+        `UPDATE cricket_games SET status = 'active', current_turn_order = ?, turn_dart_count = 0, turn_index = 0, winner_id = NULL, second_place_id = NULL, finished_at = NULL WHERE id = ?`,
         [firstOrder, gameId]
     );
 
@@ -244,11 +281,15 @@ export async function discardGame(gameId: string): Promise<void> {
     const [throwRows] = await db.query<RowDataPacket[]>(
         `SELECT id FROM cricket_throws WHERE game_id = ?`, [gameId]
     );
+    const [penaltyRows] = await db.query<RowDataPacket[]>(
+        `SELECT id FROM cricket_penalties WHERE game_id = ?`, [gameId]
+    );
 
+    await db.query(`DELETE FROM cricket_penalties WHERE game_id = ?`, [gameId]);
     await db.query(`DELETE FROM cricket_throws WHERE game_id = ?`, [gameId]);
     await db.query(`DELETE FROM cricket_participants WHERE game_id = ?`, [gameId]);
     await db.query(`DELETE FROM cricket_games WHERE id = ?`, [gameId]);
 
-    const allIds = [gameId, ...participantRows.map(r => r.id), ...throwRows.map(r => r.id)];
+    const allIds = [gameId, ...participantRows.map(r => r.id), ...throwRows.map(r => r.id), ...penaltyRows.map(r => r.id)];
     await db.query(`DELETE FROM ids WHERE id IN (${allIds.map(() => "?").join(",")})`, allIds);
 }

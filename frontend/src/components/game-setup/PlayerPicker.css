@@ -4,6 +4,12 @@
     gap: var(--space-sm);
 }
 
+.player-picker__btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
 .player-picker__initials {
     font-family: var(--font-mono);
     font-weight: 600;

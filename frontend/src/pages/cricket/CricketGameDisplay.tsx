@@ -15,6 +15,11 @@ export function CricketGameDisplay({ game }: CricketGameDisplayProps) {
             {game.status === "finished" ? (
                 <div className="game-banner game-banner--success game-banner--large">
                     {game.participants.find(p => p.player.id === game.winner_id)?.player.initials ?? "-"} wins!
+                    2nd: {game.participants.find(p => p.player.id === game.second_place_id)?.player.initials ?? "-"}
+                </div>
+            ) : game.participants.some(p => p.finish_order === 1) ? (
+                <div className="game-banner game-banner--large">
+                    {game.participants.find(p => p.finish_order === 1)?.player.initials} closed out first. Still playing for 2nd.
                 </div>
             ) : current ? (
                 <div className="game-banner game-banner--large">{current.player.initials}'s turn</div>

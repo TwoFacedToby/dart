@@ -3,6 +3,21 @@ import { db } from "./db";
 // Runs on every boot. All statements are idempotent (CREATE TABLE IF NOT
 // EXISTS / addColumnIfNotExists), so this doubles as the only migration
 // mechanism the app needs.
+
+// Adds a column to an already-existing table if it isn't there yet. Needed
+// because `CREATE TABLE IF NOT EXISTS` is a no-op against a table that
+// already exists in production, so a new column added to one of the
+// definitions below wouldn't actually reach a live database without this.
+async function addColumnIfNotExists(table: string, column: string, definition: string): Promise<void> {
+    const [rows] = await db.query<any[]>(
+        `SELECT COUNT(*) as count FROM information_schema.columns
+         WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?`,
+        [table, column]
+    );
+    if (rows[0]?.count > 0) return;
+    await db.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
 export async function createTables(): Promise<void> {
     console.log("Running migrations...");
 
@@ -39,6 +54,7 @@ export async function createTables(): Promise<void> {
             turn_in_bonus  BOOLEAN     DEFAULT FALSE,
             turn_catchup   BOOLEAN     DEFAULT FALSE,     -- locked in at first dart of the current turn
             finishers_json TEXT        DEFAULT NULL,      -- JSON array of participant_id who finished in the ending round
+            bonus_rounds_remaining INT DEFAULT 0,         -- extra full rounds still owed because the winner was on a streak
             start_streaks_json TEXT    DEFAULT NULL,      -- snapshot of every player's win streak at game creation, so undo can restore it exactly
             winner_id      VARCHAR(32) DEFAULT NULL,
             created_at     DATETIME    DEFAULT NOW(),
@@ -108,10 +124,12 @@ export async function createTables(): Promise<void> {
             turn_dart_count  INT         DEFAULT 0,
             turn_index       INT         DEFAULT 0,
             winner_id        VARCHAR(32) DEFAULT NULL,
+            second_place_id  VARCHAR(32) DEFAULT NULL, -- play continues after 1st place closes out, until 2nd place does too
             created_at       DATETIME    DEFAULT NOW(),
             finished_at      DATETIME    DEFAULT NULL,
             FOREIGN KEY (id) REFERENCES ids (id),
-            FOREIGN KEY (winner_id) REFERENCES players (id)
+            FOREIGN KEY (winner_id) REFERENCES players (id),
+            FOREIGN KEY (second_place_id) REFERENCES players (id)
             )`,
 
         `CREATE TABLE IF NOT EXISTS cricket_participants
@@ -129,6 +147,7 @@ export async function createTables(): Promise<void> {
             marks_20    INT         DEFAULT 0,
             marks_bull  INT         DEFAULT 0,
             finished    BOOLEAN     DEFAULT FALSE,
+            finish_order INT        DEFAULT NULL, -- 1 = closed out first, 2 = closed out second (ends the game)
             created_at  DATETIME    DEFAULT NOW(),
             FOREIGN KEY (id) REFERENCES ids (id),
             FOREIGN KEY (game_id) REFERENCES cricket_games (id),
@@ -153,6 +172,28 @@ export async function createTables(): Promise<void> {
             FOREIGN KEY (game_id) REFERENCES cricket_games (id),
             FOREIGN KEY (participant_id) REFERENCES cricket_participants (id),
             FOREIGN KEY (player_id) REFERENCES players (id)
+            )`,
+
+        // Per-opponent breakdown of points_scored above -- cricket_throws only
+        // records the total a shooter handed out on one dart, not who
+        // specifically received it, which "highest/average received" and
+        // "highest/average given" stats need. One row per penalized
+        // opponent per throw.
+        `CREATE TABLE IF NOT EXISTS cricket_penalties
+        (
+            id             VARCHAR(32) PRIMARY KEY,
+            seq            INT         AUTO_INCREMENT UNIQUE,
+            game_id        VARCHAR(32) NOT NULL,
+            throw_id       VARCHAR(32) NOT NULL,
+            from_player_id VARCHAR(32) NOT NULL, -- the shooter who caused the penalty
+            to_player_id   VARCHAR(32) NOT NULL, -- the opponent who took on the points
+            points         INT         NOT NULL,
+            created_at     DATETIME    DEFAULT NOW(),
+            FOREIGN KEY (id) REFERENCES ids (id),
+            FOREIGN KEY (game_id) REFERENCES cricket_games (id),
+            FOREIGN KEY (throw_id) REFERENCES cricket_throws (id),
+            FOREIGN KEY (from_player_id) REFERENCES players (id),
+            FOREIGN KEY (to_player_id) REFERENCES players (id)
             )`,
 
         // ---- X01 (101 / 301 / 501) ----
@@ -206,6 +247,10 @@ export async function createTables(): Promise<void> {
     for (const sql of statements) {
         await db.query(sql);
     }
+
+    await addColumnIfNotExists("atw_games", "bonus_rounds_remaining", "INT DEFAULT 0");
+    await addColumnIfNotExists("cricket_games", "second_place_id", "VARCHAR(32) DEFAULT NULL");
+    await addColumnIfNotExists("cricket_participants", "finish_order", "INT DEFAULT NULL");
 
     console.log("Migrations complete.");
 }

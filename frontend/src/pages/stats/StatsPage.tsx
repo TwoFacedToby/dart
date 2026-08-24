@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { getAllStats, compareStats, type PlayerStats } from "../../api";
+import { getAllStats, getStatsTotals, compareStats, type PlayerStats, type StatsTotals, type StatsPeriod } from "../../api";
 import { PlayerPicker } from "../../components/game-setup/PlayerPicker";
-import { OverviewTab } from "./OverviewTab";
+import { PeriodSelector } from "./PeriodSelector";
+import { OverviewTotals } from "./OverviewTotals";
 import { AtwStatsTab } from "./AtwStatsTab";
 import { CricketStatsTab } from "./CricketStatsTab";
 import { X01StatsTab } from "./X01StatsTab";
@@ -19,7 +20,9 @@ const TABS: { key: Tab; label: string }[] = [
 
 export function StatsPage() {
     const [tab, setTab] = useState<Tab>("overview");
+    const [period, setPeriod] = useState<StatsPeriod>("all");
     const [stats, setStats] = useState<PlayerStats[]>([]);
+    const [totals, setTotals] = useState<StatsTotals | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,18 +31,19 @@ export function StatsPage() {
     const [comparing, setComparing] = useState(false);
 
     useEffect(() => {
-        getAllStats()
-            .then(setStats)
+        setLoading(true);
+        Promise.all([getAllStats(period), getStatsTotals(period)])
+            .then(([s, t]) => { setStats(s); setTotals(t); })
             .catch(e => setError(e instanceof Error ? e.message : "Failed to load stats"))
             .finally(() => setLoading(false));
-    }, []);
+    }, [period]);
 
     async function handleCompare() {
         if (compareIds.length < 2) return;
         setComparing(true);
         setError(null);
         try {
-            setComparison(await compareStats(compareIds));
+            setComparison(await compareStats(compareIds, period));
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : "Failed to compare players");
         } finally {
@@ -52,6 +56,8 @@ export function StatsPage() {
             <h1 className="page__title">Stats</h1>
 
             {error && <div className="form-error">{error}</div>}
+
+            <PeriodSelector value={period} onChange={setPeriod} />
 
             <div className="stats-tabs">
                 {TABS.map(t => (
@@ -69,7 +75,7 @@ export function StatsPage() {
                 <p className="form-help">Loading...</p>
             ) : (
                 <>
-                    {tab === "overview" && <OverviewTab stats={stats} />}
+                    {tab === "overview" && <OverviewTotals totals={totals} />}
                     {tab === "atw" && <AtwStatsTab stats={stats} />}
                     {tab === "cricket" && <CricketStatsTab stats={stats} />}
                     {tab === "x01" && <X01StatsTab stats={stats} />}
@@ -91,19 +97,41 @@ export function StatsPage() {
                     {comparison.map(s => (
                         <div key={s.player.id} className="stats-comparison__card">
                             <h3 className="stats-comparison__name">{s.player.initials} {s.player.name}</h3>
+
+                            <h4 className="stats-comparison__group-title">Around the World</h4>
                             <dl className="stats-comparison__list">
-                                <dt>Games played</dt><dd>{s.games_played}</dd>
-                                <dt>Win rate</dt><dd>{s.win_rate}%</dd>
-                                <dt>Accuracy</dt><dd>{s.accuracy_percentage}%</dd>
-                                <dt>Darts thrown</dt><dd>{s.darts_thrown}</dd>
-                                <dt>Highest x01 turn</dt><dd>{s.highest_x01_turn}</dd>
-                                <dt>ATW win rate</dt><dd>{s.by_game.around_the_world.win_rate}%</dd>
-                                <dt>Cricket win rate</dt><dd>{s.by_game.cricket.win_rate}%</dd>
-                                <dt>X01 win rate</dt><dd>{s.by_game.x01.win_rate}%</dd>
-                                <dt>ATW current streak</dt><dd>{s.atw_current_win_streak}</dd>
-                                <dt>ATW best streak</dt><dd>{s.atw_best_win_streak}</dd>
-                                <dt>ATW longest hit streak</dt><dd>{s.atw_longest_hit_streak}</dd>
-                                <dt>ATW biggest single-turn jump</dt><dd>{s.atw_biggest_single_turn_gain}</dd>
+                                <dt>Played</dt><dd>{s.atw.played}</dd>
+                                <dt>Won</dt><dd>{s.atw.wins}</dd>
+                                <dt>Win rate</dt><dd>{s.atw.win_rate}%</dd>
+                                <dt>Accuracy</dt><dd>{s.atw.accuracy_percentage}%</dd>
+                                <dt>Avg turns to win</dt><dd>{s.atw.average_turns_to_win || "-"}</dd>
+                                <dt>Current streak</dt><dd>{s.atw.current_win_streak}</dd>
+                                <dt>Best streak</dt><dd>{s.atw.best_win_streak}</dd>
+                                <dt>Longest hit streak</dt><dd>{s.atw.longest_hit_streak}</dd>
+                                <dt>Biggest single-turn jump</dt><dd>{s.atw.biggest_single_turn_gain}</dd>
+                            </dl>
+
+                            <h4 className="stats-comparison__group-title">Cricket</h4>
+                            <dl className="stats-comparison__list">
+                                <dt>Played</dt><dd>{s.cricket.played}</dd>
+                                <dt>Won</dt><dd>{s.cricket.wins}</dd>
+                                <dt>Win rate</dt><dd>{s.cricket.win_rate}%</dd>
+                                <dt>2nd place</dt><dd>{s.cricket.times_second}</dd>
+                                <dt>Accuracy</dt><dd>{s.cricket.accuracy_percentage}%</dd>
+                                <dt>Avg turns to win</dt><dd>{s.cricket.average_turns_to_win || "-"}</dd>
+                                <dt>Highest received</dt><dd>{s.cricket.highest_received}</dd>
+                                <dt>Avg received</dt><dd>{s.cricket.average_received || "-"}</dd>
+                                <dt>Highest given</dt><dd>{s.cricket.highest_given}</dd>
+                                <dt>Avg given</dt><dd>{s.cricket.average_given || "-"}</dd>
+                            </dl>
+
+                            <h4 className="stats-comparison__group-title">101 / 301 / 501</h4>
+                            <dl className="stats-comparison__list">
+                                <dt>Played</dt><dd>{s.x01.played}</dd>
+                                <dt>Won</dt><dd>{s.x01.wins}</dd>
+                                <dt>Win rate</dt><dd>{s.x01.win_rate}%</dd>
+                                <dt>Highest turn</dt><dd>{s.x01.highest_turn}</dd>
+                                <dt>Avg arrows to win</dt><dd>{s.x01.average_arrows_to_win || "-"}</dd>
                             </dl>
                         </div>
                     ))}

@@ -261,7 +261,7 @@ async function main() {
     const aliceStats = allStats.find(s => s.player.id === alice)!;
     console.log("alice stats:", JSON.stringify(aliceStats, null, 2));
     assert(aliceStats.darts_thrown > 0, "alice has recorded darts");
-    assert(aliceStats.by_game.around_the_world.played >= 1, "alice played at least 1 atw game");
+    assert(aliceStats.atw.played >= 1, "alice played at least 1 atw game");
 
     console.log("\nSmoke test complete.");
     process.exit(process.exitCode ?? 0);
