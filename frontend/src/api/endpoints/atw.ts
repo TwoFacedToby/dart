@@ -74,8 +74,8 @@ export interface AtwGameSummary {
     phase: string;
     created_at: string;
     finished_at: string | null;
-    winner_name: string | null;
     winner_initials: string | null;
+    player_initials: string | null;
 }
 
 export const createAtwGame = (playerIds: string[]) =>

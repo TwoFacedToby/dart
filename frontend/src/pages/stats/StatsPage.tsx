@@ -125,13 +125,31 @@ export function StatsPage() {
                                 <dt>Avg given</dt><dd>{s.cricket.average_given || "-"}</dd>
                             </dl>
 
-                            <h4 className="stats-comparison__group-title">101 / 301 / 501</h4>
+                            <h4 className="stats-comparison__group-title">101</h4>
                             <dl className="stats-comparison__list">
-                                <dt>Played</dt><dd>{s.x01.played}</dd>
-                                <dt>Won</dt><dd>{s.x01.wins}</dd>
-                                <dt>Win rate</dt><dd>{s.x01.win_rate}%</dd>
-                                <dt>Highest turn</dt><dd>{s.x01.highest_turn}</dd>
-                                <dt>Avg arrows to win</dt><dd>{s.x01.average_arrows_to_win || "-"}</dd>
+                                <dt>Played</dt><dd>{s.x01["101"].played}</dd>
+                                <dt>Won</dt><dd>{s.x01["101"].wins}</dd>
+                                <dt>Win rate</dt><dd>{s.x01["101"].win_rate}%</dd>
+                                <dt>Highest turn</dt><dd>{s.x01["101"].highest_turn}</dd>
+                                {/* <dt>Avg arrows to win</dt><dd>{s.x01["101"].average_arrows_to_win || "-"}</dd> */}
+                            </dl>
+
+                            <h4 className="stats-comparison__group-title">301</h4>
+                            <dl className="stats-comparison__list">
+                                <dt>Played</dt><dd>{s.x01["301"].played}</dd>
+                                <dt>Won</dt><dd>{s.x01["301"].wins}</dd>
+                                <dt>Win rate</dt><dd>{s.x01["301"].win_rate}%</dd>
+                                <dt>Highest turn</dt><dd>{s.x01["301"].highest_turn}</dd>
+                                {/* <dt>Avg arrows to win</dt><dd>{s.x01["301"].average_arrows_to_win || "-"}</dd> */}
+                            </dl>
+
+                            <h4 className="stats-comparison__group-title">501</h4>
+                            <dl className="stats-comparison__list">
+                                <dt>Played</dt><dd>{s.x01["501"].played}</dd>
+                                <dt>Won</dt><dd>{s.x01["501"].wins}</dd>
+                                <dt>Win rate</dt><dd>{s.x01["501"].win_rate}%</dd>
+                                <dt>Highest turn</dt><dd>{s.x01["501"].highest_turn}</dd>
+                                {/* <dt>Avg arrows to win</dt><dd>{s.x01["501"].average_arrows_to_win || "-"}</dd> */}
                             </dl>
                         </div>
                     ))}

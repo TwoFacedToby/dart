@@ -1,0 +1,12 @@
+.game-history-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.game-history-detail__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-xl) 0;
+}

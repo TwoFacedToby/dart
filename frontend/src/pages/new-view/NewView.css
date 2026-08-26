@@ -1,0 +1,46 @@
+/* Self-contained light theme for the new portrait viewer screen -- uses its
+   own variable names (not the app's --color-* tokens) so it can never be
+   affected by, or accidentally bleed into, the rest of the (dark) app. */
+.new-view {
+    --nv-bg: #ffffff;
+    --nv-text: #111318;
+    --nv-muted: #8a8f98;
+    --nv-accent: #1d4ed8;
+    --nv-accent-bg: #e8edfc;
+    --nv-border: #d7dae0;
+
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    background: var(--nv-bg);
+    color: var(--nv-text);
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+}
+
+.new-view--empty {
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--nv-muted);
+}
+
+.new-view-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.new-view-placeholder__title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.new-view-placeholder__note {
+    color: var(--nv-muted);
+    font-size: 1.1rem;
+}

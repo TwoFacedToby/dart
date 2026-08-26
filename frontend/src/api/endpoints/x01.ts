@@ -32,8 +32,8 @@ export interface X01GameSummary {
     status: string;
     created_at: string;
     finished_at: string | null;
-    winner_name: string | null;
     winner_initials: string | null;
+    player_initials: string | null;
 }
 
 export const createX01Game = (playerIds: string[], startingScore: 101 | 301 | 501) =>

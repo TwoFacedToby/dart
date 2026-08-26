@@ -1,0 +1,198 @@
+.new-atw-view {
+    /* no padding on the root -- panels manage their own spacing so the
+       top/bottom split can be exact fractions of the screen height */
+}
+
+.new-atw-view__top {
+    height: 44vh;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid var(--nv-border);
+    padding: 0 16px;
+}
+
+.new-atw-view__side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.new-atw-view__side-label {
+    font-size: 1.2rem;
+    color: var(--nv-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.new-atw-view__side-initials {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.new-atw-view__side-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--nv-accent);
+}
+
+.new-atw-view__center {
+    flex: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.new-atw-view__center-initials {
+    font-size: 3.2rem;
+    font-weight: 700;
+}
+
+.new-atw-view__center-number {
+    font-size: 9rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.new-atw-view__catchup-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.4rem;
+}
+
+.new-atw-view__catchup-badge {
+    padding: 8px 24px;
+    border-radius: 999px;
+    background: var(--nv-accent);
+    color: #ffffff;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.new-atw-view__streak {
+    color: var(--nv-accent);
+    font-size: 0.5em;
+    margin-left: 2px;
+}
+
+.new-atw-view__banner {
+    flex: 1;
+    text-align: center;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--nv-accent);
+}
+
+.new-atw-view__bottom {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.new-atw-view__header {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    flex-shrink: 0;
+    border-bottom: 2px solid var(--nv-border);
+}
+
+.new-atw-view__header-cell {
+    text-align: center;
+    padding: 10px 2px;
+    font-weight: 700;
+    font-size: clamp(0.8rem, calc(60vw / var(--cols) / 4), 1.8rem);
+    border-right: 1px solid var(--nv-border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.new-atw-view__header-cell--current {
+    color: #ffffff;
+    background: var(--nv-accent);
+}
+
+.new-atw-view__header-cell--current .new-atw-view__streak {
+    color: #ffffff;
+}
+
+.new-atw-view__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    align-items: start;
+}
+
+.new-atw-view__column {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 3px;
+    padding: 8px 4px;
+    border-right: 1px solid var(--nv-border);
+    font-size: clamp(1.1rem, calc(85vw / var(--cols) / 3.2), 2.6rem);
+}
+
+.new-atw-view__slot {
+    flex: 0 0 calc(33.33% - 2px);
+    display: flex;
+    justify-content: center;
+}
+
+.new-atw-view__num {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.new-atw-view__num--target {
+    font-weight: 700;
+    color: var(--nv-text);
+}
+
+.new-atw-view__num--past {
+    color: var(--nv-muted);
+}
+
+.new-atw-view__num--past .new-atw-view__num-text {
+    text-decoration: line-through;
+    font-size: 0.7em;
+}
+
+.new-atw-view__ticks {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.new-atw-view__tick {
+    width: 0.5em;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+}
+
+.new-atw-view__win {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7em;
+    height: 1.7em;
+    border-radius: 50%;
+    background: var(--nv-accent);
+    color: #ffffff;
+    font-weight: 700;
+}

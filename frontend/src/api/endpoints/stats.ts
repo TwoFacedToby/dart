@@ -31,13 +31,14 @@ export interface PlayerStats {
         average_given: number;
         average_turns_to_win: number;
     };
-    x01: {
+    x01: Record<"101" | "301" | "501", {
         played: number;
         wins: number;
         win_rate: number;
         highest_turn: number;
-        average_arrows_to_win: number;
-    };
+        // average_arrows_to_win disabled -- see engine.ts on the backend.
+        // average_arrows_to_win: number;
+    }>;
 }
 
 export interface StatsTotals {

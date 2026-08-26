@@ -30,17 +30,19 @@ export interface PlayerStats {
         average_given: number;
         average_turns_to_win: number;
     };
-    x01: {
+    x01: Record<"101" | "301" | "501", {
         played: number;
         wins: number;
         win_rate: number;
         highest_turn: number;
-        // Turn totals are all this data model tracks (no per-dart count
-        // within a turn), so this is turns-to-win * 3 -- a slight
-        // overstatement on games that checked out before using all 3
-        // darts on the final turn, not an exact arrow count.
-        average_arrows_to_win: number;
-    };
+        // average_arrows_to_win disabled for now -- the input only tracks a
+        // turn's total score, not individual darts, so this was really
+        // turns-to-win * 3, an approximation that overstates games that
+        // checked out early on the final turn. Left commented out rather
+        // than deleted since the underlying x01_turns table doesn't change
+        // and this can come back once input tracks individual darts.
+        // average_arrows_to_win: number;
+    }>;
 }
 
 export type StatsPeriod = "month" | "3months" | "year" | "all";
@@ -198,34 +200,61 @@ async function computeCricketStats(playerId: string, since: Date | null): Promis
     };
 }
 
+const X01_SCORES = ["101", "301", "501"] as const;
+
 async function computeX01Stats(playerId: string, since: Date | null): Promise<PlayerStats["x01"]> {
-    const [[counts]] = await db.query<RowDataPacket[]>(`
-        SELECT COUNT(DISTINCT g.id) as played, COUNT(DISTINCT CASE WHEN g.winner_id = ? THEN g.id END) as wins
+    const result: PlayerStats["x01"] = {
+        "101": { played: 0, wins: 0, win_rate: 0, highest_turn: 0 },
+        "301": { played: 0, wins: 0, win_rate: 0, highest_turn: 0 },
+        "501": { played: 0, wins: 0, win_rate: 0, highest_turn: 0 },
+    };
+
+    const [countRows] = await db.query<RowDataPacket[]>(`
+        SELECT g.starting_score as score, COUNT(DISTINCT g.id) as played, COUNT(DISTINCT CASE WHEN g.winner_id = ? THEN g.id END) as wins
         FROM x01_games g
         JOIN x01_participants p ON p.game_id = g.id AND p.player_id = ?
         WHERE g.status = 'finished' ${since ? "AND g.finished_at >= ?" : ""}
+        GROUP BY g.starting_score
     `, since ? [playerId, playerId, since] : [playerId, playerId]);
 
-    const [[highest]] = await db.query<RowDataPacket[]>(`
-        SELECT MAX(score_entered) as highest FROM x01_turns WHERE player_id = ? AND busted = 0 ${since ? "AND created_at >= ?" : ""}
+    const [highestRows] = await db.query<RowDataPacket[]>(`
+        SELECT g.starting_score as score, MAX(t.score_entered) as highest
+        FROM x01_turns t
+        JOIN x01_games g ON g.id = t.game_id
+        WHERE t.player_id = ? AND t.busted = 0 ${since ? "AND t.created_at >= ?" : ""}
+        GROUP BY g.starting_score
     `, since ? [playerId, since] : [playerId]);
 
-    const [wonGameTurns] = await db.query<RowDataPacket[]>(`
-        SELECT COUNT(DISTINCT t.turn_index) as turns
-        FROM x01_games g
-        JOIN x01_participants p ON p.game_id = g.id AND p.player_id = ?
-        JOIN x01_turns t ON t.game_id = g.id AND t.participant_id = p.id
-        WHERE g.status = 'finished' AND g.winner_id = ? ${since ? "AND g.finished_at >= ?" : ""}
-        GROUP BY g.id
-    `, since ? [playerId, playerId, since] : [playerId, playerId]);
+    // average_arrows_to_win disabled -- see the note on the type above.
+    // const [turnRows] = await db.query<RowDataPacket[]>(`
+    //     SELECT score, AVG(turns) as avg_turns FROM (
+    //         SELECT g.starting_score as score, g.id as game_id, COUNT(DISTINCT t.turn_index) as turns
+    //         FROM x01_games g
+    //         JOIN x01_participants p ON p.game_id = g.id AND p.player_id = ?
+    //         JOIN x01_turns t ON t.game_id = g.id AND t.participant_id = p.id
+    //         WHERE g.status = 'finished' AND g.winner_id = ? ${since ? "AND g.finished_at >= ?" : ""}
+    //         GROUP BY g.starting_score, g.id
+    //     ) per_game
+    //     GROUP BY score
+    // `, since ? [playerId, playerId, since] : [playerId, playerId]);
 
-    return {
-        played: counts.played,
-        wins: counts.wins,
-        win_rate: rate(counts.wins, counts.played),
-        highest_turn: highest?.highest ?? 0,
-        average_arrows_to_win: average(wonGameTurns.map(r => r.turns * 3)),
-    };
+    for (const row of countRows) {
+        const key = String(row.score) as keyof typeof result;
+        if (!(key in result)) continue;
+        result[key].played = row.played;
+        result[key].wins = row.wins;
+        result[key].win_rate = rate(row.wins, row.played);
+    }
+    for (const row of highestRows) {
+        const key = String(row.score) as keyof typeof result;
+        if (key in result) result[key].highest_turn = row.highest ?? 0;
+    }
+    // for (const row of turnRows) {
+    //     const key = String(row.score) as keyof typeof result;
+    //     if (key in result) result[key].average_arrows_to_win = row.avg_turns ? Math.round(row.avg_turns * 3 * 10) / 10 : 0;
+    // }
+
+    return result;
 }
 
 export async function computePlayerStats(playerId: string, period?: string | null): Promise<PlayerStats | null> {
@@ -249,8 +278,8 @@ export async function computePlayerStats(playerId: string, period?: string | nul
             (SELECT COUNT(*) FROM cricket_throws WHERE player_id = ? ${since ? "AND created_at >= ?" : ""}) as total
     `, since ? [playerId, since, playerId, since] : [playerId, playerId]);
 
-    const gamesPlayed = atw.played + cricket.played + x01.played;
-    const wins = atw.wins + cricket.wins + x01.wins;
+    const gamesPlayed = atw.played + cricket.played + x01["101"].played + x01["301"].played + x01["501"].played;
+    const wins = atw.wins + cricket.wins + x01["101"].wins + x01["301"].wins + x01["501"].wins;
 
     return {
         player: { id: player.id, name: player.name, initials: player.initials },

@@ -55,13 +55,21 @@ a:hover {
     font-weight: 600;
 }
 .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     height: 40px;
     padding: 0 var(--space-md);
     font-size: var(--font-size-md);
     font-family: var(--font-body);
+    text-decoration: none;
     border: none;
     border-radius: var(--radius-sm);
     cursor: pointer;
+}
+
+.btn:hover {
+    text-decoration: none;
 }
 
 .btn:focus-visible {

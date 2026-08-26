@@ -11,7 +11,9 @@ export function AppShell() {
                     <Link className="app-shell__nav-link" to="/players">Players</Link>
                     <Link className="app-shell__nav-link" to="/play">Play Game</Link>
                     <Link className="app-shell__nav-link" to="/stats">Stats</Link>
+                    <Link className="app-shell__nav-link" to="/history">History</Link>
                     <Link className="app-shell__nav-link" to="/view">View Game</Link>
+                    <Link className="app-shell__nav-link" to="/new-view">New View</Link>
                 </nav>
             </aside>
 

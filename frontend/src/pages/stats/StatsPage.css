@@ -120,3 +120,25 @@
     color: var(--color-text-secondary);
     font-size: var(--font-size-xs);
 }
+
+.x01-stats-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.x01-stats-group__title {
+    margin: 0;
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+}
+
+.x01-stats-group:first-child .x01-stats-group__title {
+    padding-top: 0;
+    border-top: none;
+}

@@ -45,8 +45,9 @@ export interface CricketGameSummary {
     status: string;
     created_at: string;
     finished_at: string | null;
-    winner_name: string | null;
     winner_initials: string | null;
+    second_place_initials: string | null;
+    player_initials: string | null;
 }
 
 export type CricketTarget = "15" | "16" | "17" | "18" | "19" | "20" | "bull";

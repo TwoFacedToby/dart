@@ -97,6 +97,15 @@ function leaderNumber(participants: AtwParticipantRow[]): number {
     return Math.max(1, ...participants.map(p => p.current_number));
 }
 
+// Rule: doubles/triples only count in full if you started your turn 5+
+// behind the leader. A participant still in their mid-game catch-up phase
+// is exempt (see the comment at its call site in recordThrow) -- being far
+// behind is mechanical for them, not the "fell behind during play"
+// situation this rule rewards.
+function isCatchupEligible(participant: AtwParticipantRow, participants: AtwParticipantRow[]): boolean {
+    return !participant.catching_up && participant.current_number <= leaderNumber(participants) - 5;
+}
+
 // A normal (non-catch-up) participant always re-queues at whatever the
 // current back of the queue is, which is what keeps `queue` a clean
 // rotation of everyone's `turn_order` as play goes on. A newly caught-up
@@ -188,7 +197,7 @@ export async function recordThrow(gameId: string, result: ThrowResult, opts: { s
         // shouldn't be either. Once catching_up flips off and they join
         // normal rotation, the ordinary rule applies to them like anyone
         // else.
-        turnCatchup = !participant.catching_up && participant.current_number <= leaderNumber(participants) - 5;
+        turnCatchup = isCatchupEligible(participant, participants);
         turnIndex += 1;
         turnAllHit = true;
         turnInBonus = false;
@@ -358,11 +367,24 @@ export async function recordThrow(gameId: string, result: ThrowResult, opts: { s
         turnAllHit = true;
         turnInBonus = false;
 
+        // The turn is handing off to a new current participant (or ending
+        // the game). Their catch-up eligibility needs to be correct right
+        // now, not just after their first dart -- otherwise the indicator
+        // would incorrectly read "no catch-up" for the whole window
+        // between the hand-off and their first throw, which is exactly
+        // when the operator is looking at the screen to see it.
+        const patchedParticipants = participants.map(p =>
+            p.id === participantId ? { ...p, current_number: newNumber, finished: (justFinished || !!p.finished) ? 1 : 0 } : p
+        );
+        const patchedById = new Map(patchedParticipants.map(p => [p.id, p]));
+        const nextParticipant = newQueue.length ? patchedById.get(newQueue[0]) : undefined;
+        const nextTurnCatchup = nextParticipant ? isCatchupEligible(nextParticipant, patchedParticipants) : false;
+
         await db.query(
             `UPDATE atw_games SET turn_queue = ?, turn_index = ?, turn_dart_count = ?, turn_all_hit = ?, turn_in_bonus = ?, turn_catchup = ?,
                                   phase = ?, status = ?, finishers_json = ?, winner_id = ?, finished_at = ?, bonus_rounds_remaining = ?
              WHERE id = ?`,
-            [JSON.stringify(newQueue), turnIndex, dartCount, turnAllHit, turnInBonus, false,
+            [JSON.stringify(newQueue), turnIndex, dartCount, turnAllHit, turnInBonus, nextTurnCatchup,
                 phase, status, JSON.stringify(finishers), winnerId, finishedAt, bonusRoundsRemaining, gameId]
         );
     } else {
