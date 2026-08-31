@@ -126,14 +126,14 @@ export function NewAtwView({ game }: NewAtwViewProps) {
                         </div>
 
                         <div className="new-atw-view__center">
-                            <div className="new-atw-view__catchup-slot">
-                                {currentHasCatchup && <div className="new-atw-view__catchup-badge">CATCH-UP</div>}
-                            </div>
                             <div className="new-atw-view__center-initials">
                                 {current.player.initials}
                                 {current.player.win_streak >= 2 && <sup className="new-atw-view__streak">{current.player.win_streak}</sup>}
                             </div>
                             <div className="new-atw-view__center-number">{current.current_number}</div>
+                            <div className="new-atw-view__catchup-slot">
+                                {currentHasCatchup && <div className="new-atw-view__catchup-badge">CATCH-UP</div>}
+                            </div>
                         </div>
 
                         <div className="new-atw-view__side">
