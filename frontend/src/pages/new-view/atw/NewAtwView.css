@@ -20,6 +20,8 @@
     justify-content: center;
     gap: 4px;
     min-width: 0;
+    align-self: flex-end;
+    padding-bottom: 30px;
 }
 
 .new-atw-view__side-label {
@@ -56,7 +58,7 @@
 }
 
 .new-atw-view__center-number {
-    font-size: 9rem;
+    font-size: 16rem;
     font-weight: 800;
     line-height: 1;
 }
@@ -71,7 +73,7 @@
 .new-atw-view__catchup-badge {
     padding: 8px 24px;
     border-radius: 999px;
-    background: var(--nv-accent);
+    background: #00aa00;
     color: #ffffff;
     font-size: 1.6rem;
     font-weight: 700;
